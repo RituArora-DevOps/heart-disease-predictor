@@ -1,0 +1,86 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+.env
+.venv/
+venv/
+ENV/
+env/
+*.env
+
+# VSCode / PyCharm / IDE settings
+.vscode/
+.idea/
+
+# Mac / Linux / Windows system files
+.DS_Store
+Thumbs.db
+
+# Python package distributions
+build/
+dist/
+*.egg-info/
+
+# Data files
+data/
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.db
+*.sqlite
+*.json
+*.zip
+
+# Model files
+*.pkl
+*.joblib
+*.h5
+*.sav
+models/
+
+# Logs and outputs
+*.log
+logs/
+output/
+results/
+
+# SHAP plots or generated images
+*.png
+*.jpg
+*.jpeg
+*.pdf
+
+# Jupyter Notebook hidden folders
+.jupyter/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.~*
+
+# IPython history
+.ipython/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.cache
+
+# Test and pytest
+.pytest_cache/
+nosetests.xml
+test-results/
+
+# Virtual environments created by Poetry or pipenv
+poetry.lock
+Pipfile.lock
