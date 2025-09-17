@@ -1,0 +1,25 @@
+heart-disease-predictor/
+│
+├── backend/                ← Your domain: ML + API (FastAPI/Flask)
+│   ├── app.py              ← Main API server
+│   ├── ml/                 ← ML code: training, models, explainability
+│   │   ├── train.py
+│   │   ├── predict.py
+│   │   ├── shap_utils.py
+│   │   ├── threshold_utils.py
+│   │   ├── models/         ← Saved models (.pkl, .joblib)
+│   │   ├── data/           ← Local CSVs (ignored via .gitignore)
+│   │   └── notebooks/      ← Notebooks (optional)
+│   ├── api/                ← Optional: split API routes
+│   ├── requirements.txt    ← Backend & ML dependencies
+│   └── ...
+│
+├── frontend/               ← Teammate's React/Vue/Next app
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   └── ...
+│
+├── README.md
+├── .gitignore
+└── .venv/                  ← Local Python environment
