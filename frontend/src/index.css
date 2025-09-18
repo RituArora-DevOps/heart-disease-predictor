@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-navy: #1b2e56;
+  --color-card: #f8fafc;
+  --color-accent: #0cab5c;
+
+  --font-ui: 'Montserrat', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-navy font-ui min-h-screen text-white antialiased;
+}
+
+.container {
+  @apply mx-auto max-w-7xl px-8 md:px-12;
+}
+
+.card {
+  @apply bg-card rounded-2xl p-6 text-slate-900 shadow;
+}

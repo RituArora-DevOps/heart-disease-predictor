@@ -39,3 +39,44 @@ __pycache__/
 *.tmp
 *.png
 *.ipynb_checkpoints/
+
+# --- Node / Vite ---
+node_modules/
+dist/
+.cache/
+.temp/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite local cache
+vite.svg   
+.vite/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*           
+
+
+# Env files (commit an example instead)
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# keep examples
+!.env.example
+
+# Test / coverage
+coverage/
+*.lcov
+
+# Misc build outputs
+*.tgz
+.sass-cache/
+.tmp/
