@@ -1,4 +1,4 @@
-export default function Field({ label, unit, required, error, children }) {
+export default function Field({ label, unit, error, children }) {
   return (
     <div>
       <label className="text-sm font-semibold text-slate-800">
