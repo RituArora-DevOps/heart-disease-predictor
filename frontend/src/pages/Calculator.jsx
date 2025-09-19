@@ -7,7 +7,7 @@ import { useResult } from "../state/ResultContext";
 import Card from "../components/Card";
 import Field from "../components/Field";
 import Button from "../components/Button";
-import clsx from "clsx";
+import Segment from "../components/Segment";
 
 const HEALTH_OPTIONS = ["Poor", "Fair", "Good", "Very Good", "Excellent"];
 const AGE_GROUPS = ["18-24", "24-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"];
@@ -307,26 +307,5 @@ export default function Calculator() {
         </div>
       </form>
     </Card>
-  );
-}
-
-function Segment({ name, setValue, options }) {
-  return (
-    <div className="inline-flex overflow-hidden rounded-md border border-slate-300 bg-slate-200">
-      {options.map(([val, label], idx) => (
-        <button
-          key={val}
-          type="button"
-          className={clsx("px-4 py-2 text-sm font-semibold text-slate-700", idx === 0 && "bg-navy text-white")}
-          onClick={(e) => {
-            const parent = e.currentTarget.parentElement;
-            [...parent.children].forEach((btn) => btn.classList.remove("bg-navy", "text-white"));
-            e.currentTarget.classList.add("bg-navy", "text-white");
-            setValue(name, val, { shouldValidate: true, shouldDirty: true });
-          }}>
-          {label}
-        </button>
-      ))}
-    </div>
   );
 }
