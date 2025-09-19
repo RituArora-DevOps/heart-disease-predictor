@@ -3,11 +3,10 @@ export default function Field({ label, unit, required, error, children }) {
     <div>
       <label className="text-sm font-semibold text-slate-800">
         {label}
-        {required && <span className="ml-1 text-[#ff0000]">*</span>}
         {unit && <span className="ml-1 text-xs text-slate-500">({unit})</span>}
       </label>
       <div className="mt-1">{children}</div>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
-  )
+  );
 }

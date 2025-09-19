@@ -106,7 +106,7 @@ export default function Calculator() {
     <Card title="Assess Your Risk">
       <form onSubmit={handleSubmit(onSubmit)} className="grid max-h-[70vh] gap-x-10 gap-y-6 overflow-y-auto pr-1 md:grid-cols-4">
         <Field label="General health" error={errors.General_Health?.message}>
-          <select className="iinput h-9.5 w-full rounded-md border border-slate-300 px-3 text-slate-900 md:w-28" {...register("General_Health")}>
+          <select className="input h-9.5 w-full rounded-md border border-slate-300 px-3 text-slate-900 md:w-28" {...register("General_Health")}>
             {HEALTH_OPTIONS.map((o) => (
               <option key={o} value={o}>
                 {o}
