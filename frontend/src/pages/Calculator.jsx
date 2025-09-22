@@ -11,10 +11,11 @@ import Segment from "../components/Segment";
 
 const HEALTH_OPTIONS = ["Poor", "Fair", "Good", "Very Good", "Excellent"];
 const AGE_GROUPS = ["18-24", "24-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"];
+const CHECKUP_OPTIONS = ["Never", "5 or more years ago", "Within the past 5 years", "Within the past 2 years", "Within the past year"];
 
 const schema = z.object({
   General_Health: z.enum(HEALTH_OPTIONS),
-  Checkup: z.enum(["0", "1"]),
+  Checkup: z.enum(CHECKUP_OPTIONS),
   Exercise: z.enum(["0", "1"]),
   Skin_Cancer: z.enum(["0", "1"]),
   Other_Cancer: z.enum(["0", "1"]),
@@ -51,7 +52,7 @@ export default function Calculator() {
       General_Health: "Good",
       Age_Category: "45-49",
       Sex: "1", // Male
-      Checkup: "0",
+      Checkup: "Never",
       Exercise: "1",
       Skin_Cancer: "0",
       Other_Cancer: "0",
@@ -76,7 +77,7 @@ export default function Calculator() {
 
     const payload = {
       General_Health: v.General_Health,
-      Checkup: num(v.Checkup),
+      Checkup: v.Checkup,
       Exercise: num(v.Exercise),
       Skin_Cancer: num(v.Skin_Cancer),
       Other_Cancer: num(v.Other_Cancer),
@@ -137,14 +138,13 @@ export default function Calculator() {
         </Field>
 
         <Field label="Recent medical checkup" error={errors.Checkup?.message}>
-          <Segment
-            name="Checkup"
-            setValue={setValue}
-            options={[
-              ["0", "No"],
-              ["1", "Yes"],
-            ]}
-          />
+          <select className="input h-9.5 w-full rounded-md border border-slate-300 px-3 text-slate-900 md:w-28" {...register("Checkup")}>
+            {CHECKUP_OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Exercise regularly" error={errors.Exercise?.message}>
