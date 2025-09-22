@@ -10,8 +10,10 @@ import Button from "../components/Button";
 import Segment from "../components/Segment";
 
 const HEALTH_OPTIONS = ["Poor", "Fair", "Good", "Very Good", "Excellent"];
-const AGE_GROUPS = ["18-24", "24-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"];
+const AGE_GROUPS = ["18-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"];
 const CHECKUP_OPTIONS = ["Never", "5 or more years ago", "Within the past 5 years", "Within the past 2 years", "Within the past year"];
+const DIABETES_OPTIONS = ["No", "No, pre-diabetes or borderline diabetes", "Yes, but female told only during pregnancy", "Yes"];
+const SEX_OPTIONS = ["Female", "Male"];
 
 const schema = z.object({
   General_Health: z.enum(HEALTH_OPTIONS),
@@ -20,9 +22,9 @@ const schema = z.object({
   Skin_Cancer: z.enum(["0", "1"]),
   Other_Cancer: z.enum(["0", "1"]),
   Depression: z.enum(["0", "1"]),
-  Diabetes: z.enum(["0", "1"]),
+  Diabetes: z.enum(DIABETES_OPTIONS),
   Arthritis: z.enum(["0", "1"]),
-  Sex: z.enum(["0", "1"]),
+  Sex: z.enum(SEX_OPTIONS),
   Age_Category: z.enum(AGE_GROUPS),
 
   Height_cm: z.coerce.number().min(0, { message: "Must be ≥ 0" }),
@@ -51,13 +53,13 @@ export default function Calculator() {
     defaultValues: {
       General_Health: "Good",
       Age_Category: "45-49",
-      Sex: "1", // Male
+      Sex: "Female",
       Checkup: "Never",
       Exercise: "1",
       Skin_Cancer: "0",
       Other_Cancer: "0",
       Depression: "0",
-      Diabetes: "0",
+      Diabetes: "No",
       Arthritis: "0",
 
       Height_cm: 170,
@@ -82,9 +84,9 @@ export default function Calculator() {
       Skin_Cancer: num(v.Skin_Cancer),
       Other_Cancer: num(v.Other_Cancer),
       Depression: num(v.Depression),
-      Diabetes: num(v.Diabetes),
+      Diabetes: v.Diabetes,
       Arthritis: num(v.Arthritis),
-      Sex: num(v.Sex),
+      Sex: v.Sex,
       Age_Category: v.Age_Category,
 
       Height_cm: v.Height_cm,
@@ -116,15 +118,14 @@ export default function Calculator() {
           </select>
         </Field>
 
-        <Field label="Sex">
-          <Segment
-            name="Sex"
-            setValue={setValue}
-            options={[
-              ["1", "Male"],
-              ["0", "Female"],
-            ]}
-          />
+        <Field label="Sex" error={errors.Sex?.message}>
+          <select className="input h-9.5 w-full rounded-md border border-slate-300 px-3 text-slate-900 md:w-28" {...register("Sex")}>
+            {SEX_OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Age group" error={errors.Age_Category?.message}>
@@ -279,14 +280,13 @@ export default function Calculator() {
         </Field>
 
         <Field label="Diabetes" error={errors.Diabetes?.message}>
-          <Segment
-            name="Diabetes"
-            setValue={setValue}
-            options={[
-              ["0", "No"],
-              ["1", "Yes"],
-            ]}
-          />
+          <select className="input h-9.5 w-full rounded-md border border-slate-300 px-3 text-slate-900 md:w-28" {...register("Diabetes")}>
+            {DIABETES_OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Arthritis" error={errors.Arthritis?.message}>
