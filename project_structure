@@ -1,25 +1,39 @@
-heart-disease-predictor/
+heart_disease_project/
 │
-├── backend/                ← Your domain: ML + API (FastAPI/Flask)
-│   ├── app.py              ← Main API server
-│   ├── ml/                 ← ML code: training, models, explainability
-│   │   ├── train.py
-│   │   ├── predict.py
-│   │   ├── shap_utils.py
-│   │   ├── threshold_utils.py
-│   │   ├── models/         ← Saved models (.pkl, .joblib)
-│   │   ├── data/           ← Local CSVs (ignored via .gitignore)
-│   │   └── notebooks/      ← Notebooks (optional)
-│   ├── api/                ← Optional: split API routes
-│   ├── requirements.txt    ← Backend & ML dependencies
-│   └── ...
-│
-├── frontend/               ← Teammate's React/Vue/Next app
-│   ├── public/
+├── backend/
+│   ├── artifacts/
+│   │   ├── train.csv
+│   │   ├── test.csv
+│   │   ├── data.csv
+│   │   ├── preprocessor.pkl
+│   │   └── model.pkl
+│   │
+│   ├── data/
+│   │   └── cleaned_data.csv
+│   │
+│   ├── notebook/
+│   │   └── HeartDiseaseClassifier.ipynb
+│   │
 │   ├── src/
-│   ├── package.json
+│   │   ├── __init__.py
+│   │   ├── components/
+│   │   │   ├── __init__.py
+│   │   │   ├── data_ingestion.py
+│   │   │   ├── data_transformation.py
+│   │   │   └── model_trainer.py
+│   │   │
+│   │   ├── pipeline/
+│   │   │   ├── __init__.py
+│   │   │   ├── train_pipeline.py
+│   │   │   └── predict_pipeline.py
+│   │   │
+│   │   ├── exception.py
+│   │   ├── logger.py
+│   │   └── utils.py
+│   │
+│   ├── main.py
+│   ├── app.py                  # FastAPI app entrypoint
+│   └── requirements.txt
+├── frontend/                  
 │   └── ...
-│
-├── README.md
-├── .gitignore
-└── .venv/                  ← Local Python environment
+└── README.md

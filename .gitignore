@@ -1,82 +1,77 @@
-# Ignore data and models in backend/ml/
-backend/ml/data/
-backend/ml/models/
+# ========================
+# General Python
+# ========================
+__pycache__/
+*.py[cod]
+*.pkl
+*.joblib
+*.log
+*.tmp
+*.csv
+*.png
 
-# If you moved notebooks under backend/ml/
-backend/ml/notebooks/__pycache__/
-backend/ml/notebooks/.ipynb_checkpoints/
+# Notebooks
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
 
-# Ignore frontend build artifacts and node_modules
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+backend/.venv/
+
+# Secret files
+.env
+*.env
+!.env.example
+
+# IDEs / Editors
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ========================
+# Backend ML (modular)
+# ========================
+backend/data/
+backend/models/
+backend/notebooks/__pycache__/
+backend/notebooks/.ipynb_checkpoints/
+
+# Artifacts (optional)
+backend/artifacts/
+backend/__pycache__/
+
+# ========================
+# Frontend (React, Vite, etc.)
+# ========================
 frontend/node_modules/
 frontend/build/
 frontend/dist/
+frontend/.cache/
+frontend/.temp/
 
-# General node.js
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Ignore virtual environments (in root or backend)
-.venv/
-venv/
-backend/.venv/
-env/
-ENV/
-
-# Ignore .env and secrets
-*.env
-.env
-
-# Already existing (good!)
-__pycache__/
-*.py[cod]
-.vscode/
-.idea/
-*.pkl
-*.joblib
-*.csv
-*.log
-*.tmp
-*.png
-*.ipynb_checkpoints/
-
-# --- Node / Vite ---
-node_modules/
-dist/
-.cache/
-.temp/
-*.log
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Vite local cache
-vite.svg   
+# Vite
 .vite/
+vite.svg
 
-# Editor / OS
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/*           
-
-
-# Env files (commit an example instead)
-.env
-.env.*.local
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-# keep examples
-!.env.example
-
-# Test / coverage
+# ========================
+# Test / Coverage
+# ========================
 coverage/
 *.lcov
 
-# Misc build outputs
+# ========================
+# Misc
+# ========================
 *.tgz
 .sass-cache/
 .tmp/
