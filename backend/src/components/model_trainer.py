@@ -78,5 +78,28 @@ class ModelTrainer:
                     'n_estimators': [50, 100]
                 }
             }
+
+            logging.info('Starting model evaluation using cross-validation (ROC AUC)...')
+            model_report, best_models = evaluate_models(X_train, y_train, X_test, y_test, models, params, metric='roc_auc')
+
+            best_model_name = max(model_report, key=model_report.get)
+            best_model = best_models[best_model_name]
+            best_model_score = model_report[best_model_name]
+
+            logging.info(f"Best model found: {best_model_name} with ROC AUC score: {best_model_score: .4f}")
+
+            if best_model_score < 0.6:
+                raise CustomException("No model found with ROC AUC score above the threshold of 0.6", sys)
+            
+            logging.info('Saving the best model to disk...')
+            save_object(
+                file_path=self.model_trainer_config.trained_model_file_path,
+                obj=best_model
+            )
+
+            y_pred_proba = best_model.predict_proba(X_test)[:, 1]
+            roc_auc = roc_auc_score(y_test, y_pred_proba)
+            return roc_auc
+
         except Exception as e:
             raise CustomException(e, sys)

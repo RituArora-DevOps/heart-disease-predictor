@@ -9,9 +9,18 @@ import joblib
 # Initialize app
 app = FastAPI()
 
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # Replace with your frontend domain in prod
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
 # Load pre-trained artifacts (preprocessor and models)
-PREPROCESSOR_PATH = os.path.join('/artifacts', 'preprocessor.pkl')
-MODEL_PATH = os.path.join('/artifacts','model.pkl')
+BASE_DIR = os.path.dirname(__file__)
+PREPROCESSOR_PATH = os.path.join(BASE_DIR,'artifacts', 'preprocessor.pkl')
+MODEL_PATH = os.path.join(BASE_DIR,'artifacts','model.pkl')
 
 model=joblib.load(MODEL_PATH)
 preprocessor = joblib.load(PREPROCESSOR_PATH)
@@ -89,8 +98,8 @@ def predict(data: PatientData):
         )
 
     except Exception as e:
-        return HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Uncomment to run directly
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+# Run the app
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
