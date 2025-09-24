@@ -38,7 +38,7 @@ class ModelTrainer:
                 "Decision Tree": DecisionTreeClassifier(random_state=42),
                 "Gradient Boosting": GradientBoostingClassifier(random_state=42),
                 "K-Neighbors": KNeighborsClassifier(),
-                "XGBClassifier": XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42),
+                "XGBClassifier": XGBClassifier(eval_metric='logloss', random_state=42),
                 "CatBoosting Classifier": CatBoostClassifier(verbose=False, random_seed=42),
                 "AdaBoost Classifier": AdaBoostClassifier(random_state=42),
             }
