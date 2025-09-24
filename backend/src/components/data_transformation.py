@@ -7,7 +7,7 @@ from dataclasses  import dataclass
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 
 from src.logger import logging
 from src.exception import CustomException
@@ -20,10 +20,13 @@ class DataTransformationConfig:
 class BinaryEncoder(BaseEstimator, TransformerMixin):
     def __init__(self):
         self.mapping = {'Yes': 1, 'No': 0}
+        self._is_fitted = False
     def fit(self, X, y=None):
+        self.fitted_ = True
         return self
     def transform(self, X):
-        return X.replace(self.mapping).astype(int)
+        check_is_fitted(self, 'fitted_')
+        return X.apply(lambda col:col.map(self.mapping))
     
 class DataTransformation:
     def __init__(self):
@@ -115,12 +118,10 @@ class DataTransformation:
             preprocessor = self.get_preprocessor()
 
             logging.info("Fitting preprocessor on training data")
-            # Fitting preprocessor
-            preprocessor.fit(X_train)
 
             logging.info("Transforming training and testing data")
             # Transforming training and testing data
-            X_train_preprocessed = preprocessor.transform(X_train)
+            X_train_preprocessed = preprocessor.fit_transform(X_train)
             X_test_preprocessed = preprocessor.transform(X_test)
 
             logging.info("Saving preprocessor")

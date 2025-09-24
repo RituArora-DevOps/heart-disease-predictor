@@ -12,4 +12,4 @@ uvicorn[standard]
 python-multipart
 
 # Editable install for development
--e .
+#-e .
