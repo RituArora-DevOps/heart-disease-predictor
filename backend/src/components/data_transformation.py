@@ -77,7 +77,7 @@ class DataTransformation:
             ])
 
             # Full preprocessor
-            preprocessor = ColumnTransformer([
+            preprocessor = ColumnTransformer([  # column transformer is a transformer that allows you to combine multiple transformers
                 ('num', num_pipeline, num_cols),
                 ('bin', binary_pipeline, binary_cols),
                 ('ord', ordinal_pipeline, ordinal_cols)
@@ -85,5 +85,55 @@ class DataTransformation:
 
             return preprocessor
         
+        except Exception as e:
+            raise CustomException(e, sys)
+        
+    def initiate_data_transformation(self, train_path, test_path):
+        try:
+            logging.info("Starting data transformation")
+            # Reading train and test data
+            train_df=pd.read_csv(train_path)
+            test_df=pd.read_csv(test_path)
+
+            logging.info("Read train and test data completed")
+
+            # Target encoding
+            target_col = 'Heart_Disease'
+            train_df[target_col]=train_df[target_col].map({'Yes':1, 'No':0})
+            test_df[target_col]=test_df[target_col].map({'Yes':1, 'No':0})
+
+            logging.info("Target column encoding completed")
+
+            logging.info("Split input and target features")
+            # Splitting input and target features
+            X_train = train_df.drop(columns=[target_col], axis=1)
+            y_train = train_df[target_col]
+
+            X_test = test_df.drop(columns=[target_col], axis=1)
+            y_test = test_df[target_col]
+
+            preprocessor = self.get_preprocessor()
+
+            logging.info("Fitting preprocessor on training data")
+            # Fitting preprocessor
+            preprocessor.fit(X_train)
+
+            logging.info("Transforming training and testing data")
+            # Transforming training and testing data
+            X_train_preprocessed = preprocessor.transform(X_train)
+            X_test_preprocessed = preprocessor.transform(X_test)
+
+            logging.info("Saving preprocessor")
+            # Saving preprocessor object
+            save_object(self.config.preprocessor_obj_file_path, preprocessor) 
+
+            logging.info("Data transformation completed")
+
+            return (
+                np.hstack((X_train_preprocessed, y_train.values.reshape(-1, 1))), 
+                np.hstack((X_test_preprocessed, y_test.values.reshape(-1, 1))), 
+                self.config.preprocessor_obj_file_path
+            )
+
         except Exception as e:
             raise CustomException(e, sys)
