@@ -1,10 +1,27 @@
 #!/usr/bin/env python
 from setuptools import find_packages,setup
+from typing import List
 
-setup(name='heart-risk-predictor',
+HYPHEN_E_DOT='-e .'
+
+def get_requirements(file_path:str)->List[str]:
+    """
+    This function will return the list of requirements
+    """
+    requirements=[]
+    with open(file_path) as file_obj:
+        requirements=file_obj.readlines()
+        requirements=[req.replace('\n','') for req in requirements]
+        if HYPHEN_E_DOT in requirements:
+            requirements.remove(HYPHEN_E_DOT)
+    return requirements
+
+setup(
+    name='heart-disease-predictor',
       version='0.0.1',
       description='Python Distribution Utilities',
       author='Ritu Arora',
       author_email='arora0824@gmail.com',
-      packages=['pandas', 'numpy', 'seaborn', 'flask', 'flask_restful', 'gunicorn', 'scikit-learn', 'xgboost', 'category-encoders', 'pydantic', 'pytest' ],
+      packages=find_packages(),
+      install_requires = get_requirements('requirements.txt')
      )

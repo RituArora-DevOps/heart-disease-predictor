@@ -1,0 +1,15 @@
+pandas
+numpy
+seaborn
+matplotlib
+scikit-learn
+catboost
+xgboost
+dill
+joblib
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Editable install for development
+-e .
