@@ -25,6 +25,7 @@ def evaluate_models(X_train, y_train, X_test, y_test, models: dict, params: dict
     try:
         report = {}
         best_models = {}
+        predictions = {}
 
         for model_name, model in models.items():
             logging.info(f"Starting GridSearchCV for{model_name}...")
@@ -52,12 +53,15 @@ def evaluate_models(X_train, y_train, X_test, y_test, models: dict, params: dict
             else:
                 y_test_pred_proba = best_model.decision_function(X_test)
 
+            y_test_pred = best_model.predict(X_test)
             score = roc_auc_score(y_test, y_test_pred_proba)
             report[model_name] = score
             best_models[model_name] = best_model
+            predictions[model_name] = {'y_pred': y_test_pred, 'y_proba': y_test_pred_proba}
+
             logging.info(f"{model_name} ROC AUC Score on test set: {score: .4f}")
 
-        return report, best_models
+        return report, best_models, predictions
 
     except Exception as e:
         raise CustomException(e, sys)
