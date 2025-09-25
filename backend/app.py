@@ -44,7 +44,7 @@ class PatientData(BaseModel):
     Age_Category: str
     Height_cm: float
     Weight_kg: float
-    BMI: float
+    # BMI: float
     Smoking_History: str
     Alcohol_Consumption: float
     Fruit_Consumption: float
@@ -73,6 +73,9 @@ def predict(data: PatientData):
     try:
         # Covert input to dict
         input_dict = data.model_dump()
+
+        # Compute BMI
+        input_dict["BMI"] = input_dict["Weight_kg"] / ((input_dict["Height_cm"]/100) ** 2)
 
         # Compute log features
         input_dict["Weight_(kg)_log"] = np.log1p(input_dict["Weight_kg"])
@@ -106,5 +109,5 @@ def predict(data: PatientData):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Run the app
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
