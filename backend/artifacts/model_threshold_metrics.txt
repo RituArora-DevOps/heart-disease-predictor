@@ -1,0 +1,13 @@
+Optimal Threshold: 0.2020
+F1 Score at Optimal Threshold: 0.3820
+Confusion Matrix at Optimal Threshold:
+[[51375  5302]
+ [ 2627  2451]]Classification Report at Optimal Threshold:
+              precision    recall  f1-score   support
+
+           0     0.9514    0.9065    0.9284     56677
+           1     0.3161    0.4827    0.3820      5078
+
+    accuracy                         0.8716     61755
+   macro avg     0.6337    0.6946    0.6552     61755
+weighted avg     0.8991    0.8716    0.8834     61755
