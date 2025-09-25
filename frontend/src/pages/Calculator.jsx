@@ -30,13 +30,11 @@ const schema = z.object({
   Height_cm: z.coerce.number().min(0, { message: "Must be ≥ 0" }),
   Weight_kg: z.coerce.number().min(0, { message: "Must be ≥ 0" }),
 
-  BMI: z.coerce.number().min(10, { message: "Min 10" }).max(60, { message: "Max 60" }),
-
   Smoking_History: z.enum(["0", "1"]),
-  Alcohol_Consumption: z.enum(["0", "1"]),
-  Fruit_Consumption: z.enum(["0", "1"]),
-  Green_Vegetables_Consumption: z.enum(["0", "1"]),
-  FriedPotato_Consumption: z.enum(["0", "1"]),
+  Alcohol_Consumption: z.coerce.number().min(0),
+  Fruit_Consumption: z.coerce.number().min(0),
+  Green_Vegetables_Consumption: z.coerce.number().min(0),
+  FriedPotato_Consumption: z.coerce.number().min(0),
 });
 
 export default function Calculator() {
@@ -61,21 +59,18 @@ export default function Calculator() {
       Depression: "0",
       Diabetes: "No",
       Arthritis: "0",
-
       Height_cm: 170,
       Weight_kg: 70,
-      BMI: 24,
-
       Smoking_History: "0",
-      Alcohol_Consumption: "0",
-      Fruit_Consumption: "1",
-      Green_Vegetables_Consumption: "1",
-      FriedPotato_Consumption: "0",
+      Alcohol_Consumption: 0,
+      Fruit_Consumption: 1,
+      Green_Vegetables_Consumption: 1,
+      FriedPotato_Consumption: 0,
     },
   });
 
   const onSubmit = async (v) => {
-    const yn = (x) => (String(x) === "1" || String(x).toLowerCase() === "yes" ? "Yes" : "No");
+    const yn = (x) => (String(x) === "1" ? "Yes" : "No");
 
     const payload = {
       General_Health: v.General_Health,
@@ -88,21 +83,22 @@ export default function Calculator() {
       Arthritis: yn(v.Arthritis),
       Smoking_History: yn(v.Smoking_History),
 
+      Diabetes: v.Diabetes,
       Sex: v.Sex,
       Age_Category: v.Age_Category,
 
       Height_cm: Number(v.Height_cm),
       Weight_kg: Number(v.Weight_kg),
-      BMI: Number(v.BMI),
 
-      Alcohol_Consumption: Number(v.Alcohol_Consumption) || 0,
-      Fruit_Consumption: Number(v.Fruit_Consumption) || 0,
-      Green_Vegetables_Consumption: Number(v.Green_Vegetables_Consumption) || 0,
-      FriedPotato_Consumption: Number(v.FriedPotato_Consumption) || 0,
+      Alcohol_Consumption: Number(v.Alcohol_Consumption),
+      Fruit_Consumption: Number(v.Fruit_Consumption),
+      Green_Vegetables_Consumption: Number(v.Green_Vegetables_Consumption),
+      FriedPotato_Consumption: Number(v.FriedPotato_Consumption),
     };
 
     const res = await postPredict(payload);
-    setResult(res);
+
+    setResult({ ...res, input: payload });
     nav("/results");
   };
 
@@ -235,16 +231,6 @@ export default function Calculator() {
             {...register("Weight_kg")}
           />
           <p className="mt-1 text-xs text-slate-500 italic">Value must be ≥ 0</p>
-        </Field>
-
-        <Field label="BMI" error={errors.BMI?.message}>
-          <input
-            className="input h-9.5 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 md:w-28"
-            type="number"
-            step="0.1"
-            {...register("BMI")}
-          />
-          <p className="mt-1 text-xs text-slate-500 italic">Typical adult range: 10–60</p>
         </Field>
 
         <Field label="History of skin cancer" error={errors.Skin_Cancer?.message}>
