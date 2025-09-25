@@ -3,12 +3,9 @@
 # ========================
 __pycache__/
 *.py[cod]
-*.pkl
 *.joblib
 *.log
 *.tmp
-*.csv
-*.png
 
 # Notebooks
 .ipynb_checkpoints/
@@ -35,13 +32,11 @@ Thumbs.db
 # ========================
 # Backend ML (modular)
 # ========================
-backend/data/
 backend/models/
 backend/notebooks/__pycache__/
 backend/notebooks/.ipynb_checkpoints/
 
 # Artifacts (optional)
-backend/artifacts/
 backend/__pycache__/
 
 # ========================
