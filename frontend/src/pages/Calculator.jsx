@@ -75,29 +75,27 @@ export default function Calculator() {
   });
 
   const onSubmit = async (v) => {
-    const num = (x) => Number(x);
-
     const payload = {
       General_Health: v.General_Health,
       Checkup: v.Checkup,
-      Exercise: num(v.Exercise),
-      Skin_Cancer: num(v.Skin_Cancer),
-      Other_Cancer: num(v.Other_Cancer),
-      Depression: num(v.Depression),
+      Exercise: v.Exercise,
+      Skin_Cancer: v.Skin_Cancer,
+      Other_Cancer: v.Other_Cancer,
+      Depression: v.Depression,
       Diabetes: v.Diabetes,
-      Arthritis: num(v.Arthritis),
+      Arthritis: v.Arthritis,
       Sex: v.Sex,
       Age_Category: v.Age_Category,
 
-      Height_cm: v.Height_cm,
-      Weight_kg: v.Weight_kg,
-      BMI: v.BMI,
+      Height_cm: Number(v.Height_cm),
+      Weight_kg: Number(v.Weight_kg),
+      BMI: Number(v.BMI),
 
-      Smoking_History: num(v.Smoking_History),
-      Alcohol_Consumption: num(v.Alcohol_Consumption),
-      Fruit_Consumption: num(v.Fruit_Consumption),
-      Green_Vegetables_Consumption: num(v.Green_Vegetables_Consumption),
-      FriedPotato_Consumption: num(v.FriedPotato_Consumption),
+      Smoking_History: v.Smoking_History,
+      Alcohol_Consumption: v.Alcohol_Consumption,
+      Fruit_Consumption: v.Fruit_Consumption,
+      Green_Vegetables_Consumption: v.Green_Vegetables_Consumption,
+      FriedPotato_Consumption: v.FriedPotato_Consumption,
     };
 
     const res = await postPredict(payload);
