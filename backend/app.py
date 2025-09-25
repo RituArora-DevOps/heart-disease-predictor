@@ -93,7 +93,7 @@ def predict(data: PatientData):
 
         # Predict probability
         probability = model.predict_proba(transformed_data)[0][1]
-        threshold = 0.5
+        threshold = 0.202
         prediction = int(probability >= threshold)
 
         return PredictionResponse(
