@@ -34,6 +34,55 @@ heart_disease_project/
 │   ├── main.py
 │   ├── app.py                  # FastAPI app entrypoint
 │   └── requirements.txt
-├── frontend/                  
-│   └── ...
-└── README.md
+│
+├─ frontend/                                  
+│  ├─ public/
+│  │  └─ vite.svg                            
+│  │
+│  ├─ src/
+│  │  ├─ api/                                 # Single source of truth for backend calls
+│  │  │  ├─ client.js                         # Axios instance; reads VITE_API_BASE
+│  │  │  └─ endpoints.js                      # API paths
+│  │  │
+│  │  ├─ assets/                             
+│  │  │  ├─ hero.PNG
+│  │  │  └─ react.svg
+│  │  │
+│  │  ├─ components/                          # Reusable UI pieces
+│  │  │  ├─ Button.jsx                        
+│  │  │  ├─ Card.jsx                          
+│  │  │  ├─ ErrorBoundary.jsx                 
+│  │  │  ├─ Field.jsx                         
+│  │  │  ├─ Gauge.jsx                         
+│  │  │  ├─ NavBar.jsx                        
+│  │  │  ├─ Segment.jsx                       
+│  │  │  └─ Toast.jsx                         
+│  │  │
+│  │  ├─ pages/                               # Route-level screens
+│  │  │  ├─ Calculator.jsx                    # Collects form data → calls /predict
+│  │  │  ├─ Disclaimer.jsx                    
+│  │  │  ├─ Home.jsx                          
+│  │  │  ├─ Resources.jsx                     
+│  │  │  └─ Results.jsx                       # Renders prediction result
+│  │  │
+│  │  ├─ state/
+│  │  │  └─ ResultContext.jsx                 # Stores prediction & shares across pages
+│  │  │
+│  │  ├─ App.css                              
+│  │  ├─ App.jsx                              # App shell + routes
+│  │  ├─ index.css                            
+│  │  ├─ main.jsx                             # React entry
+│  │  └─ routes.jsx                           # React Router routes
+│  │
+│  ├─ Dockerfile                              
+│  ├─ eslint.config.js
+│  ├─ index.html
+│  ├─ package.json
+│  ├─ postcss.config.cjs
+│  ├─ README.md
+│  ├─ tailwind.config.js
+│  └─ vite.config.js                          # Dev proxy to backend 
+│
+├─ docker-compose.yml                         
+└─ README.md                                  
+

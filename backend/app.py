@@ -5,17 +5,22 @@ import pandas as pd
 import os
 import uvicorn
 import joblib
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize app
 app = FastAPI()
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],  # Replace with frontend domain in prod
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",          
+        "http://127.0.0.1:5173",
+        "https://deployment-domain.com"
+    ], # Replace with frontend domain in prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load pre-trained artifacts (preprocessor and models)
 BASE_DIR = os.path.dirname(__file__)
