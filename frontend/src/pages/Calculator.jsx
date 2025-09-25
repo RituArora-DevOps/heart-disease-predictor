@@ -75,15 +75,19 @@ export default function Calculator() {
   });
 
   const onSubmit = async (v) => {
+    const yn = (x) => (String(x) === "1" || String(x).toLowerCase() === "yes" ? "Yes" : "No");
+
     const payload = {
       General_Health: v.General_Health,
       Checkup: v.Checkup,
-      Exercise: v.Exercise,
-      Skin_Cancer: v.Skin_Cancer,
-      Other_Cancer: v.Other_Cancer,
-      Depression: v.Depression,
-      Diabetes: v.Diabetes,
-      Arthritis: v.Arthritis,
+
+      Exercise: yn(v.Exercise),
+      Skin_Cancer: yn(v.Skin_Cancer),
+      Other_Cancer: yn(v.Other_Cancer),
+      Depression: yn(v.Depression),
+      Arthritis: yn(v.Arthritis),
+      Smoking_History: yn(v.Smoking_History),
+
       Sex: v.Sex,
       Age_Category: v.Age_Category,
 
@@ -91,11 +95,10 @@ export default function Calculator() {
       Weight_kg: Number(v.Weight_kg),
       BMI: Number(v.BMI),
 
-      Smoking_History: v.Smoking_History,
-      Alcohol_Consumption: v.Alcohol_Consumption,
-      Fruit_Consumption: v.Fruit_Consumption,
-      Green_Vegetables_Consumption: v.Green_Vegetables_Consumption,
-      FriedPotato_Consumption: v.FriedPotato_Consumption,
+      Alcohol_Consumption: Number(v.Alcohol_Consumption) || 0,
+      Fruit_Consumption: Number(v.Fruit_Consumption) || 0,
+      Green_Vegetables_Consumption: Number(v.Green_Vegetables_Consumption) || 0,
+      FriedPotato_Consumption: Number(v.FriedPotato_Consumption) || 0,
     };
 
     const res = await postPredict(payload);
@@ -299,7 +302,7 @@ export default function Calculator() {
         </Field>
 
         <div className="flex justify-center md:col-span-4">
-          <Button size="lg" disabled={isSubmitting}>
+          <Button type="submit" size="lg" disabled={isSubmitting}>
             {isSubmitting ? "Calculating…" : "Calculate"}
           </Button>
         </div>

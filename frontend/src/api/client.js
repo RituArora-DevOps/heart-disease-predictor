@@ -1,35 +1,21 @@
-import axios from "axios";
-
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-
-export const api = axios.create({
-  baseURL,
-  headers: { "Content-Type": "application/json" },
-  timeout: 15000,
-});
-
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    window.dispatchEvent(new CustomEvent("toast", { detail: { type: "error", msg: apiErrorMsg(err) } }));
-    return Promise.reject(err);
-  }
-);
-
-function apiErrorMsg(err) {
-  if (err.response?.status === 422) return "Validation error: please check your inputs.";
-  if (err.code === "ECONNABORTED") return "Request timed out. Try again.";
-  if (err.response?.status >= 500) return "Server error. Please try again later.";
-  return "Network error. Please check your connection.";
-}
-
 // Map backend -> UI shape expected by Results.jsx
 export async function postPredict(payload) {
   const { data } = await api.post("/predict", payload);
-  // backend returns { prediction:int, probability:float, threshold_used:float }
+
+  const probability =
+    data?.probability != null ? Number(data.probability)
+    : data?.risk_probability != null ? Number(data.risk_probability)
+    : 0;
+
+  const threshold = data?.threshold_used != null ? Number(data.threshold_used) : 0.5;
+
   return {
-    risk_probability: data.probability,
-    risk_level: data.prediction === 1 ? "High" : "Low",
-    raw: data,
+    probability,
+    threshold_used: threshold,
+    prediction:
+      data?.prediction != null ? Number(data.prediction)
+      : probability >= threshold ? 1
+      : 0,
+    _raw: data,
   };
 }
