@@ -22,9 +22,14 @@ from src.exception import CustomException
 from src.logger import logging
 from src.utils import save_object, evaluate_models
 
+# Note: Removed imports for model_evaluator and threshold_tuner
+
 @dataclass
 class ModelTrainerConfig:
     trained_model_file_path=os.path.join('artifacts', 'model.pkl')
+    # New path to save the test array for later evaluation
+    test_array_path = os.path.join('artifacts', 'test_array.npy')
+    # Evaluation artifact paths are now defined in the dedicated evaluator pipeline
     metrics_file_path = os.path.join('artifacts', 'model_metrics.txt')
     threshold_cuve_path = os.path.join('artifacts', 'precision_recall_threshold_curve.png')
     threshold_metrics_path = os.path.join('artifacts', 'model_threshold_metrics.txt')
@@ -96,9 +101,7 @@ class ModelTrainer:
             best_model_name = max(model_report, key=model_report.get)
             best_model = best_models[best_model_name]
             best_model_score = model_report[best_model_name]
-            # y_pred = predictions[best_model_name]['y_pred']
-            # y_pred_proba = predictions[best_model_name]['y_proba']
-
+            
             if best_model_score < 0.6:
                 raise CustomException("No model found with ROC AUC score above the threshold of 0.6", sys)
             
@@ -110,9 +113,15 @@ class ModelTrainer:
                 obj=best_model
             )
 
-            logging.info(f"Model saved to {self.config.trained_model_file_path}")
+            logging.info(f"Model saved to {self.model_trainer_config.trained_model_file_path}")
 
-            return best_model_name, best_model, predictions[best_model_name], (X_test, y_test)
+            # Save the full test array for the separate evaluation step
+            logging.info("Saving test data array (features and target) for downstream evaluation pipeline...")
+            np.save(self.model_trainer_config.test_array_path, test_array)
+            logging.info(f"Test array saved to {self.model_trainer_config.test_array_path}")
+
+            # Return the best model and the path to the saved test array
+            return best_model_name, self.model_trainer_config.test_array_path
 
         except Exception as e:
             raise CustomException(e, sys)

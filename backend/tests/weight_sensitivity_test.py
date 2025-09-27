@@ -4,7 +4,7 @@ import joblib  # or use your own load_object if you have it
 from math import log
 
 # Load model and preprocessor
-model = joblib.load('artifacts/model.pkl')
+model = joblib.load('artifacts/model.pkl') 
 preprocessor = joblib.load('artifacts/preprocessor.pkl')
 
 # Base input (from your shared row)

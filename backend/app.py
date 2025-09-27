@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import os
 import uvicorn
-import joblib
+import dill
 from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize app
@@ -13,7 +13,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",          
+        "http://localhost:5173",             
         "http://127.0.0.1:5173",
         "https://our-frontend-domain.com"
     ], # Replace with frontend domain in prod
@@ -22,13 +22,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load pre-trained artifacts (preprocessor and models)
-BASE_DIR = os.path.dirname(__file__)
-PREPROCESSOR_PATH = os.path.join(BASE_DIR,'artifacts', 'preprocessor.pkl')
-MODEL_PATH = os.path.join(BASE_DIR,'artifacts','model.pkl')
+# --- ARTIFACT LOADING CONFIGURATION ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ARTIFACTS_DIR = os.path.join(BASE_DIR, 'artifacts')
 
-model=joblib.load(MODEL_PATH)
-preprocessor = joblib.load(PREPROCESSOR_PATH)
+PREPROCESSOR_PATH = os.path.join(ARTIFACTS_DIR, 'preprocessor.pkl')
+MODEL_PATH = os.path.join(ARTIFACTS_DIR, 'model.pkl')
+OPTIMAL_THRESHOLD_PATH = os.path.join(ARTIFACTS_DIR, 'optimal_threshold.txt')
+
+# Load pre-trained artifacts
+try:
+    model = dill.load(open(MODEL_PATH, 'rb'))
+    preprocessor = dill.load(open(PREPROCESSOR_PATH, 'rb'))
+    
+    # Load the optimal threshold calculated during the evaluation step
+    with open(OPTIMAL_THRESHOLD_PATH, 'r') as f:
+        OPTIMAL_THRESHOLD = float(f.read())
+    
+    print(f"Artifacts loaded successfully. Optimal Threshold: {OPTIMAL_THRESHOLD:.4f}")
+    
+except FileNotFoundError as e:
+    # If artifacts aren't found, raise a startup error
+    print(f"Error loading required artifact: {e}")
+    raise Exception("Model artifacts not found. Please run the full MLOps pipeline first.")
 
 # Define input schema
 class PatientData(BaseModel):
@@ -44,7 +60,6 @@ class PatientData(BaseModel):
     Age_Category: str
     Height_cm: float
     Weight_kg: float
-    # BMI: float
     Smoking_History: str
     Alcohol_Consumption: float
     Fruit_Consumption: float
@@ -57,15 +72,17 @@ class PredictionResponse(BaseModel):
     probability: float
     threshold_used: float
 
-# Final DataFrame (match training format exactly)
-columns_order = [
-    "General_Health", "Checkup", "Exercise", "Skin_Cancer", "Other_Cancer", "Depression",
-    "Diabetes", "Arthritis", "Sex", "Age_Category",
-    "Height_(cm)", "Weight_(kg)", "BMI", "Smoking_History",
-    "Alcohol_Consumption", "Fruit_Consumption", "Green_Vegetables_Consumption", "FriedPotato_Consumption",
-    "Weight_(kg)_log", "BMI_log", "Alcohol_Consumption_log", "Fruit_Consumption_log",
-    "Green_Vegetables_Consumption_log", "FriedPotato_Consumption_log"
+# The required order of features (original and engineered) that MUST be passed to the preprocessor.
+# This list is based on the column definitions in data_transformation.py.
+FINAL_COLUMNS_FOR_PREPROCESSOR = [
+    'Height_(cm)', 'Weight_(kg)_log', 'BMI_log', 'Alcohol_Consumption_log', 
+    'Fruit_Consumption_log', 'Green_Vegetables_Consumption_log', 
+    'FriedPotato_Consumption_log', 
+    'Exercise', 'Skin_Cancer', 'Other_Cancer', 'Depression', 'Arthritis', 
+    'Smoking_History',
+    'General_Health', 'Checkup', 'Age_Category', 'Sex', 'Diabetes'
 ]
+
 
 # Inference route
 @app.post('/predict', response_model=PredictionResponse)
@@ -74,10 +91,12 @@ def predict(data: PatientData):
         # Covert input to dict
         input_dict = data.model_dump()
 
-        # Compute BMI
+        # --- Feature Engineering (Must match data_transformation.py) ---
+        
+        # 1. Compute BMI
         input_dict["BMI"] = input_dict["Weight_kg"] / ((input_dict["Height_cm"]/100) ** 2)
 
-        # Compute log features
+        # 2. Compute log features (using log1p as in training)
         input_dict["Weight_(kg)_log"] = np.log1p(input_dict["Weight_kg"])
         input_dict["BMI_log"] = np.log1p(input_dict["BMI"])
         input_dict["Alcohol_Consumption_log"] = np.log1p(input_dict["Alcohol_Consumption"])
@@ -85,29 +104,36 @@ def predict(data: PatientData):
         input_dict["Green_Vegetables_Consumption_log"] = np.log1p(input_dict["Green_Vegetables_Consumption"])
         input_dict["FriedPotato_Consumption_log"] = np.log1p(input_dict["FriedPotato_Consumption"])
 
-        # Rename keys to match what model expects
+        # 3. Rename keys to match preprocessor expectations (original physical metrics)
         input_dict["Height_(cm)"] = input_dict.pop("Height_cm")
         input_dict["Weight_(kg)"] = input_dict.pop("Weight_kg")
-
-        df = pd.DataFrame([input_dict])[columns_order]
+        
+        # 4. Create DataFrame from all generated features
+        df = pd.DataFrame([input_dict])
+        
+        # 5. Select and order only the 18 columns the preprocessor expects
+        df_for_transform = df[FINAL_COLUMNS_FOR_PREPROCESSOR]
 
         # Transform
-        transformed_data = preprocessor.transform(df)
+        transformed_data = preprocessor.transform(df_for_transform)
 
         # Predict probability
         probability = model.predict_proba(transformed_data)[0][1]
-        threshold = 0.202
-        prediction = int(probability >= threshold)
+        
+        # Use the global optimal threshold
+        prediction = int(probability >= OPTIMAL_THRESHOLD)
 
         return PredictionResponse(
             prediction=prediction,
             probability=round(probability, 4), 
-            threshold_used=threshold
+            threshold_used=round(OPTIMAL_THRESHOLD, 4)
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Log the error for debugging
+        print(f"Prediction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed due to an internal error: {e}")
 
 # Run the app
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

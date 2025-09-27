@@ -1,14 +1,16 @@
-Confusion Matrix (threshold=0.5):
-[[56564   113]
- [ 4909   169]]
+--- Model Performance Metrics (Threshold = 0.5) ---
 
-Classification Report (threshold=0.5):
+Confusion Matrix:
+[[56561   116]
+ [ 4905   173]]
+
+Classification Report:
               precision    recall  f1-score   support
 
-           0     0.9201    0.9980    0.9575     56677
-           1     0.5993    0.0333    0.0631      5078
+         0.0     0.9202    0.9980    0.9575     56677
+         1.0     0.5986    0.0341    0.0645      5078
 
     accuracy                         0.9187     61755
-   macro avg     0.7597    0.5156    0.5103     61755
-weighted avg     0.8938    0.9187    0.8839     61755
-ROC AUC Score:  0.8399
+   macro avg     0.7594    0.5160    0.5110     61755
+weighted avg     0.8938    0.9187    0.8841     61755
+ROC AUC Score:  0.8408
