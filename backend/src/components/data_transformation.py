@@ -65,7 +65,8 @@ class DataTransformation:
                 'Alcohol_Consumption_log', 
                 'Fruit_Consumption_log',
                 'Green_Vegetables_Consumption_log', 
-                'FriedPotato_Consumption_log'
+                'FriedPotato_Consumption_log',
+                'BMI_calculated'
             ]
             logging.info(f"Using simplified numerical features to reduce collinearity: {num_cols}")
 
