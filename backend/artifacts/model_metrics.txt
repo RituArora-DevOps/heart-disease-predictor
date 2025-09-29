@@ -1,4 +1,7 @@
---- Model Performance Metrics (Threshold = 0.5) ---
+--- Model Performance Metrics ---
+
+Default Threshold: 0.5 
+F1 score at Default Threshold: 0.0645
 
 Confusion Matrix:
 [[56561   116]
