@@ -62,12 +62,19 @@ class DataTransformation:
                 'Height_(cm)', 
                 'Weight_(kg)_log', 
                 'BMI_log', 
-                'Alcohol_Consumption_log', 
-                'Fruit_Consumption_log',
-                'Green_Vegetables_Consumption_log', 
-                'FriedPotato_Consumption_log'
+                # --- V2 NEW/MODIFIED NUMERICAL FEATURES ---
+                'BMI_calculated',                  # New raw calculated BMI
+                'BMI_Age_Interaction',             # New Interaction Feature 1
+                'Exercise_Health_Interaction',     # New Interaction Feature 2
+                
+                # New capped log consumption features (replacing the old ones)
+                'Alcohol_Consumption_log_capped', 
+                'Fruit_Consumption_log_capped',
+                'Green_Vegetables_Consumption_log_capped', 
+                'FriedPotato_Consumption_log_capped'
+
             ]
-            logging.info(f"Using simplified numerical features to reduce collinearity: {num_cols}")
+            logging.info(f"Using V2 numerical features to reduce collinearity: {num_cols}")
 
             # Pipeline for numeric data
             num_pipeline = Pipeline([

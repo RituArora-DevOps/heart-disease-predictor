@@ -50,49 +50,30 @@ class ModelTrainer:
 
             models = {
                 "Logistic Regression": LogisticRegression(max_iter=1000, class_weight='balanced', random_state=42),
-                "Random Forest": RandomForestClassifier(class_weight='balanced', random_state=42),
-                "Decision Tree": DecisionTreeClassifier(random_state=42),
-                "Gradient Boosting": GradientBoostingClassifier(random_state=42),
-                "K-Neighbors": KNeighborsClassifier(),
-                "XGBClassifier": XGBClassifier(eval_metric='logloss', random_state=42),
-                "CatBoosting Classifier": CatBoostClassifier(verbose=False, random_seed=42),
-                "AdaBoost Classifier": AdaBoostClassifier(random_state=42),
+                "XGBClassifier": XGBClassifier(eval_metric='logloss', random_state=42)
+                # "CatBoosting Classifier": CatBoostClassifier(verbose=False, random_seed=42),
             }
 
+            # --- CHANGE 8: Define deeper/broader parameter distributions for RandomizedSearchCV ---
             params = {
                 "Logistic Regression": {
-                    'C': [0.01, 0.1, 1, 10],
-                    'solver': ['lbfgs', 'liblinear']
-                },
-                "Random Forest": {
-                    'n_estimators': [50, 100, 200],
-                    'max_depth': [None, 10, 20]
-                },
-                "Decision Tree": {
-                    'criterion': ['gini', 'entropy'],
-                    'max_depth': [None, 10, 20]
-                },
-                "Gradient Boosting": {
-                    'learning_rate': [0.01, 0.1],
-                    'n_estimators': [50, 100],
-                    'subsample': [0.8, 1.0]
-                },
-                "K-Neighbors": {
-                    'n_neighbors': [3, 5, 7]
+                    'C': [0.001, 0.01, 0.1, 1, 10, 100], # Expanded range
+                    'solver': ['liblinear', 'lbfgs'] # Use liblinear as it handles L1/L2 better
                 },
                 "XGBClassifier": {
-                    'learning_rate': [0.01, 0.1],
-                    'n_estimators': [50, 100]
-                },
-                "CatBoosting Classifier": {
-                    'depth': [6, 8, 10],
-                    'learning_rate': [0.01, 0.1],
-                    'iterations': [50, 100]
-                },
-                "AdaBoost Classifier": {
-                    'learning_rate': [0.01, 0.1, 0.5],
-                    'n_estimators': [50, 100]
+                    'learning_rate': [0.01, 0.05, 0.1, 0.2], # Expanded range
+                    'n_estimators': [100, 200, 500, 1000], # Expanded range
+                    'max_depth': [3, 5, 7, 9],
+                    'gamma': [0, 0.1, 0.5, 1],
+                    'subsample': [0.6, 0.8, 1.0],
                 }
+                # "CatBoosting Classifier": {
+                #     'iterations': [200, 500, 750, 1000], # Expanded range
+                #     'learning_rate': [0.01, 0.03, 0.05, 0.1],
+                #     'depth': [6, 8, 10], # Expanded range
+                #     'l2_leaf_reg': [1, 3, 5, 7],
+                #     'subsample': [0.6, 0.8, 1.0],
+                # }
             }
 
             logging.info('Starting model evaluation using cross-validation (ROC AUC)...')

@@ -21,12 +21,19 @@ def get_feature_names(preprocessor):
     Extract feature names after preprocessing (for column transformer).
     """
     try:
-        num_features = preprocessor.named_transformers_['num']['scaler'].get_feature_names_out()
-        bin_features = preprocessor.transformers_[1][2]  # binary col names (already known)
-        ord_features = preprocessor.transformers_[2][2]  # ordinal col names (already known)
+        # Get names from the numerical pipeline (StandardScaler has get_feature_names_out)
+        num_features = list(preprocessor.named_transformers_['num']['scaler'].get_feature_names_out())
+
+        # Get names used by the binary pipeline (these are the original column names)
+        # Note: BinaryEncoder in DataTransformation creates one column per input binary feature.
+        binary_features_input = preprocessor.transformers_[1][2] # Get the list of column names fed into 'bin'
         
-        feature_names = np.concatenate([num_features, bin_features, ord_features])
-        return feature_names
+        # Get names used by the ordinal pipeline (these are the original column names)
+        ordinal_features_input = preprocessor.transformers_[2][2] # Get the list of column names fed into 'ord'
+ 
+        # The output order is: [Num cols] + [Binary cols] + [Ordinal cols]
+        feature_names = num_features + binary_features_input + ordinal_features_input
+        return np.array(feature_names) # Return as numpy array to match expected type
     except Exception as e:
         raise CustomException("Failed to extract feature names from preprocessor", sys)
 
