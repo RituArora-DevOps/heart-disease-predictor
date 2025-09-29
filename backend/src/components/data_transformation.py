@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import pandas as pd
-from dataclasses  import dataclass
+from dataclasses import dataclass
 
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.compose import ColumnTransformer
@@ -45,24 +45,36 @@ class DataTransformation:
 
             # Custom order for ordinal encoder
             ordinal_mapping = [
-                ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],             # General_Health
+                ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'], # General_Health
                 ['Never', '5 or more years ago', 'Within the past 5 years',
-                'Within the past 2 years', 'Within the past year'],            # Checkup
+                'Within the past 2 years', 'Within the past year'], # Checkup
                 ['18-24', '25-29', '30-34', '35-39', '40-44',
                 '45-49', '50-54', '55-59', '60-64', '65-69',
-                '70-74', '75-79', '80+'],                                      # Age_Category
-                ['Female', 'Male'],                                             # Sex
+                '70-74', '75-79', '80+'], # Age_Category
+                ['Female', 'Male'], # Sex
                 ['No', 'No, pre-diabetes or borderline diabetes',
-                'Yes, but female told only during pregnancy', 'Yes']           # Diabetes
+                'Yes, but female told only during pregnancy', 'Yes'] # Diabetes
             ]
 
-            # Numerical columns (already include log-transformed ones)
+            # Numerical columns: We keep only 'Height_(cm)' and the log-transformed versions 
+            # to reduce collinearity and improve signal for skewed features.
             num_cols = [
-                'Height_(cm)', 'Weight_(kg)', 'BMI', 'Alcohol_Consumption',
-                'Fruit_Consumption', 'Green_Vegetables_Consumption', 'FriedPotato_Consumption',
-                'Weight_(kg)_log', 'BMI_log', 'Alcohol_Consumption_log', 'Fruit_Consumption_log',
-                'Green_Vegetables_Consumption_log', 'FriedPotato_Consumption_log'
+                'Height_(cm)', 
+                'Weight_(kg)_log', 
+                'BMI_log', 
+                # --- V2 NEW/MODIFIED NUMERICAL FEATURES ---
+                'BMI_calculated',                  # New raw calculated BMI
+                'BMI_Age_Interaction',             # New Interaction Feature 1
+                'Exercise_Health_Interaction',     # New Interaction Feature 2
+                
+                # New capped log consumption features (replacing the old ones)
+                'Alcohol_Consumption_log_capped', 
+                'Fruit_Consumption_log_capped',
+                'Green_Vegetables_Consumption_log_capped', 
+                'FriedPotato_Consumption_log_capped'
+
             ]
+            logging.info(f"Using V2 numerical features to reduce collinearity: {num_cols}")
 
             # Pipeline for numeric data
             num_pipeline = Pipeline([
@@ -80,7 +92,7 @@ class DataTransformation:
             ])
 
             # Full preprocessor
-            preprocessor = ColumnTransformer([  # column transformer is a transformer that allows you to combine multiple transformers
+            preprocessor = ColumnTransformer([ # column transformer is a transformer that allows you to combine multiple transformers
                 ('num', num_pipeline, num_cols),
                 ('bin', binary_pipeline, binary_cols),
                 ('ord', ordinal_pipeline, ordinal_cols)
