@@ -11,5 +11,8 @@ fastapi
 uvicorn[standard]
 python-multipart
 shap
+requests
+pytest
+
 # Editable install for development
 #-e .
