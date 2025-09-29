@@ -10,6 +10,6 @@ joblib
 fastapi
 uvicorn[standard]
 python-multipart
-
+shap
 # Editable install for development
 #-e .
