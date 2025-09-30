@@ -32,23 +32,53 @@ on:
 
 env:
   AWS_REGION: MY_AWS_REGION # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: MY_ECR_REPOSITORY # set this to your Amazon ECR repository name
-  ECS_SERVICE: MY_ECS_SERVICE # set this to your Amazon ECS service name
-  ECS_CLUSTER: MY_ECS_CLUSTER # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION:
-    MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
-    # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME:
-    MY_CONTAINER_NAME # set this to the name of the container in the
-    # containerDefinitions section of your task definition
+
+  # --- ECR Repositories (One for each service) ---
+  ECR_REPOSITORY_BACKEND: CARDIORISK_BACKEND_REPO # e.g., my-backend-api
+  ECR_REPOSITORY_FRONTEND: CARDIORISK_FRONTEND_REPO # e.g., my-frontend-ui
+
+  # --- ECS Cluster Info ---
+  ECS_CLUSTER: MY_ECS_CLUSTER
+
+  # --- Backend Service (API) ---
+  ECS_SERVICE_BACKEND: CARDIORISK_API_SERVICE
+  ECS_TASK_DEFINITION_BACKEND: .aws/task-definition-backend.json
+  CONTAINER_NAME_BACKEND: backend-container-name
+
+  # --- Frontend Service (UI) ---
+  ECS_SERVICE_FRONTEND: CARDIORISK_UI_SERVICE
+  ECS_TASK_DEFINITION_FRONTEND: .aws/task-definition-frontend.json
+  CONTAINER_NAME_FRONTEND: frontend-container-name
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
-    name: Deploy
+  test:
+    name: Continuous Integration & Pytest
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install backend dependencies & Pytest
+        # Run from the repository root, assuming requirements.txt is in backend/
+        run: pip install -r backend/requirements.txt
+
+      - name: Run Model Integrity Tests (Pytest)
+        # Assuming you have a pytest.ini or your tests are in the backend/ directory
+        run: pytest backend/tests/model_integrity_tests.py
+        # This step is the "gate" - if it fails, the workflow stops here!
+  deploy:
+    name: Continuous Deployment
+    runs-on: ubuntu-latest
+    needs: test
     environment: production
 
     steps:
@@ -65,32 +95,64 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
+      # -----------------------------------------------
+      # 2. Deploy Backend API (Python/Model)
+      # -----------------------------------------------
+      - name: Build, tag, and push BACKEND image
+        id: build-backend-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build a docker container and
-          # push it to ECR so that it can
-          # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          # Build context is the backend directory
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY_BACKEND }}:$IMAGE_TAG ./backend
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_BACKEND }}:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_BACKEND }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
+      - name: Render BACKEND task definition
+        id: task-def-backend
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
+          task-definition: ${{ env.ECS_TASK_DEFINITION_BACKEND }}
+          container-name: ${{ env.CONTAINER_NAME_BACKEND }}
+          image: ${{ steps.build-backend-image.outputs.image }}
 
-      - name: Deploy Amazon ECS task definition
+      - name: Deploy BACKEND ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
+          task-definition: ${{ steps.task-def-backend.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE_BACKEND }}
+          cluster: ${{ env.ECS_CLUSTER }}
+
+      # -----------------------------------------------
+      # 3. Deploy Frontend UI (React/Results.jsx)
+      # -----------------------------------------------
+      - name: Build, tag, and push FRONTEND image
+        id: build-frontend-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build context is the frontend directory
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY_FRONTEND }}:$IMAGE_TAG ./frontend
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY_FRONTEND }}:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY_FRONTEND }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Render FRONTEND task definition
+        id: task-def-frontend
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION_FRONTEND }}
+          container-name: ${{ env.CONTAINER_NAME_FRONTEND }}
+          image: ${{ steps.build-frontend-image.outputs.image }}
+
+      - name: Deploy FRONTEND ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def-frontend.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE_FRONTEND }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
