@@ -1,0 +1,50 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+logs/
+notebooks/
+
+# Jupyter notebooks and dataset files
+*.ipynb
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.json
+*.parquet
+
+# Artifacts not needed in image (we copy only required files)
+artifacts/*
+!artifacts/model.pkl
+!artifacts/preprocessor.pkl
+!artifacts/optimal_threshold.txt
+
+# Logs and environment files
+*.log
+.env
+*.env
+
+# OS & IDE specific files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Virtual environments
+venv/
+.env/
+.venv/
+opt/
+
+# Git files
+.git
+.gitignore
+
+# Docker itself
+Dockerfile
+docker-compose.yml

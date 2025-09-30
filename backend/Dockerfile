@@ -1,63 +1,65 @@
-# ---------------------------------------------------------------------
-# STAGE 1: Builder Environment
-# Uses the full Python image to ensure robust installation of C extensions (like psycopg2)
-# ---------------------------------------------------------------------
-FROM python:3.11 AS builder
+# ---------------------------------------------------------
+# STAGE 1: Builder (For compiling wheels & installing deps)
+# ---------------------------------------------------------
+FROM python:3.11-slim AS builder
 
-# Set working directory
-WORKDIR /app
+# Avoid Python writing .pyc files & enable real-time logging
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Ensure we use a persistent virtual environment
+# Use a virtual environment for isolation and better control
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Install necessary system dependencies for building psycopg2 (libpq-dev)
-# and immediately clean up the APT cache.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install only build dependencies required for compiling packages like psycopg2
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    gcc \
+    && rm -rf /var/lib/apt/lists/*  # CLEANUP: Saves space
 
-# Copy requirements and install dependencies
-# Ensure 'psycopg2' is listed in requirements.txt
+# Install Python packages without pip cache
+WORKDIR /app
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    # CRITICAL CLEANUP: Remove the pip cache after installation to save space
-    && rm -rf ~/.cache/pip
+RUN pip install --no-cache-dir -r requirements.txt
 
-# ---------------------------------------------------------------------
-# STAGE 2: Runtime Environment (Minimalist for production)
-# Switches back to the smaller 'slim' image
-# ---------------------------------------------------------------------
+# ---------------------------------------------------------
+# STAGE 2: Runtime (Final minimal image)
+# ---------------------------------------------------------
 FROM python:3.11-slim AS runtime
 
-# Install PostgreSQL client libraries needed at runtime (libpq5)
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq5 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy the virtual environment from the builder stage
+# Reuse the same virtual environment
 ENV VIRTUAL_ENV=/opt/venv
-COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Set working directory for the application
+# Only install runtime libraries needed by psycopg2 at runtime (not dev tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*  # CLEANUP: Save space
+
+# Copy only the virtual environment from the builder stage
+COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
+
+# Set application workdir
 WORKDIR /app
 
-# Copy application code and ML artifacts
+# Copy only necessary files to reduce size
 COPY app.py .
 COPY requirements.txt .
 COPY database ./database
 COPY services ./services
-COPY artifacts ./artifacts 
 COPY src ./src
 
-# Expose port (FastAPI default)
+# Only copy essential artifacts — omit unused CSVs or extras
+RUN mkdir -p /app/artifacts
+COPY artifacts/model.pkl artifacts/preprocessor.pkl artifacts/optimal_threshold.txt ./artifacts/
+
+# Optional: remove tests, data files, logs, or notebooks if not used in production
+# RUN rm -rf tests/ data/ notebooks/
+
+# Expose FastAPI's port
 EXPOSE 8000
 
-# Run FastAPI with Uvicorn
+# Use Uvicorn to serve the app
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
