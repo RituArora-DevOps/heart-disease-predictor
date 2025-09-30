@@ -1,3 +1,4 @@
+// frontend/src/pages/Results.jsx
 import Card from "../components/Card";
 import Button from "../components/Button";
 import { useResult } from "../state/ResultContext";
@@ -28,6 +29,101 @@ export default function Results() {
 
   const input = result.input || {};
 
+  // ---------- NEW: Explanation logic ----------
+  // Helpers to make age category comparisons resilient to labels like "65-69 years"
+  const parseAgeLow = (ageLabel) => {
+    if (!ageLabel || typeof ageLabel !== "string") return NaN;
+    const m = ageLabel.match(/\d+/);
+    return m ? Number(m[0]) : NaN;
+  };
+  const isOlder = (ageLabel, min) => {
+    const low = parseAgeLow(ageLabel);
+    return Number.isFinite(low) && low >= min;
+  };
+  const isYounger = (ageLabel, max) => {
+    const low = parseAgeLow(ageLabel);
+    return Number.isFinite(low) && low <= max;
+  };
+
+  const getRiskExplanation = (inputObj, prediction) => {
+    const explanations = [];
+    const highRisk = prediction === 1;
+
+    const formatBool = (val) => (val === "Yes" ? "Present" : "Absent");
+
+    // 1) Age (highest impact heuristically)
+    const age = inputObj.Age_Category;
+    if (age) {
+      if (highRisk && isOlder(age, 60)) {
+        explanations.push(`Age is a key driver: your age category (${age}) contributed significantly to the higher predicted risk.`);
+      } else if (!highRisk && isYounger(age, 34)) {
+        explanations.push(`Age is protective: your younger age category (${age}) helped lower the risk score.`);
+      }
+    }
+
+    // 2) General Health
+    const health = inputObj.General_Health;
+    if (health) {
+      if (highRisk && (health === "Poor" || health === "Fair")) {
+        explanations.push("Self-reported general health is Poor/Fair, which strongly elevates cardiovascular risk in population data.");
+      } else if (!highRisk && (health === "Excellent" || health === "Very good")) {
+        explanations.push(`General health is ${health}, which provided a protective signal.`);
+      }
+    }
+
+    // 3) BMI & Age interaction (derived)
+    const height = Number(inputObj.Height_cm);
+    const weight = Number(inputObj.Weight_kg);
+    if (height > 0 && weight > 0) {
+      const bmi = weight / (height / 100) ** 2;
+      const bmiStatus =
+        bmi >= 30 ? "Obese"
+        : bmi >= 25 ? "Overweight"
+        : "Normal";
+
+      if (highRisk && bmi >= 25 && isOlder(age, 55)) {
+        explanations.push(`Your BMI is ${bmiStatus}; combined with age, this amplified the predicted risk (BMI–Age interaction).`);
+      } else if (!highRisk && bmi < 25) {
+        explanations.push(`A healthy BMI (${bmiStatus}) acted as a protective factor.`);
+      }
+    }
+
+    // 4) Sex
+    const sex = inputObj.Sex;
+    if (sex && highRisk && sex === "Male") {
+      explanations.push(`Biological sex (${sex}) is associated with a higher baseline risk in this model.`);
+    }
+
+    // 5) Lifestyle / comorbidities (take the “worst” or “best” signal)
+    const smoking = inputObj.Smoking_History; // "Yes"/"No"
+    const exercise = inputObj.Exercise; // "Yes"/"No"
+    const arthritis = inputObj.Arthritis; // "Yes"/"No"
+
+    if (highRisk) {
+      if (smoking === "Yes") {
+        explanations.push("Smoking history is Present, a high-ranking risk factor in epidemiological data.");
+      } else if (exercise === "No") {
+        explanations.push("Lack of regular exercise is a strong risk factor and raises incidence in the data.");
+      } else if (arthritis === "Yes") {
+        explanations.push(`Arthritis is ${formatBool(arthritis)}, indicating chronic inflammation, which elevates risk.`);
+      }
+    } else {
+      if (exercise === "Yes") {
+        explanations.push("Regular physical activity is a strong protective factor and helped lower your risk.");
+      } else if (smoking === "No") {
+        explanations.push(`Smoking history is ${formatBool(smoking)}, which contributed a protective signal.`);
+      }
+    }
+
+    if (explanations.length === 0) {
+      return ["The prediction reflects a balanced combination of factors; no single factor dominated the result."];
+    }
+    return explanations.slice(0, 5);
+  };
+
+  const explanations = getRiskExplanation(input, pred);
+  // ---------- END: Explanation logic ----------
+
   const handleDownload = () => {
     if (!input || Object.keys(input).length === 0) {
       alert("No form data found. Please re-run the assessment and try again.");
@@ -40,6 +136,7 @@ export default function Results() {
     const marginX = 48;
     let y = 56;
 
+    // Title + date
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
     doc.text("CardioRisk — Assessment Result", marginX, y);
@@ -49,6 +146,7 @@ export default function Results() {
     doc.text(`Generated on: ${new Date().toLocaleString()}`, marginX, y);
     y += 28;
 
+    // Result
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Your Result", marginX, y);
@@ -63,6 +161,7 @@ export default function Results() {
     doc.text(`Model Threshold: ${thr}`, marginX, y);
     y += 30;
 
+    // Inputs
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Your Inputs", marginX, y);
@@ -124,6 +223,33 @@ export default function Results() {
       },
     });
 
+    // NEW: Key factors
+    y += 10;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Key Factors Influencing Your Result", marginX, y);
+    y += 18;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(13);
+
+    const explanationHeader = pred === 1 ? "The main factors driving your risk score up were:" : "The main protective factors lowering your risk were:";
+    doc.text(explanationHeader, marginX, y);
+    y += lineHeight;
+
+    explanations.forEach((exp) => {
+      doc.text("•", marginX, y);
+      doc.text(exp, marginX + 12, y);
+      y += lineHeight;
+      if (y > doc.internal.pageSize.getHeight() - 72) {
+        doc.addPage();
+        y = 56;
+      }
+    });
+
+    y += 30;
+
+    // How to lower your risk
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("How to lower your risk", marginX, y);
@@ -161,6 +287,7 @@ export default function Results() {
       }
     });
 
+    // Footer
     const footer = "CardioRisk — educational tool (not a medical diagnosis)";
     doc.setFontSize(9);
     const textWidth = doc.getTextWidth(footer);
@@ -171,9 +298,9 @@ export default function Results() {
   };
 
   return (
-    <Card title="Your Estimated Heart Disease Risk" panelClassName="max-w-[1000px] min-h-[520px] p-10" bodyClassName="flex h-full flex-col">
+    <Card title="Your Estimated Heart Disease Risk" panelClassName="max-w-[1280px] min-h-[520px] p-10" bodyClassName="flex h-full flex-col">
       <div className="flex h-full flex-col">
-        <div className="mt-9 grid grid-cols-1 gap-16 md:grid-cols-2 max-w-[1050px] mx-auto">
+        <div className="mt-9 grid grid-cols-1 gap-16 md:grid-cols-3 max-w-[1240px] mx-auto">
           <div className="rounded-xl bg-white p-8 shadow-sm">
             <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
               <p className="text-3xl font-extrabold text-slate-900">{percent}</p>
@@ -187,7 +314,19 @@ export default function Results() {
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-6 shadow-sm">
+          <div className="rounded-xl bg-white p-8 shadow-sm">
+            <h3 className="mb-3 font-bold text-slate-800">Key factors behind your result</h3>
+            <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
+              {explanations.map((e, idx) => (
+                <li key={idx} className="text-slate-700">
+                  {e}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 右：How to lower your risk 单独一张卡片 */}
+          <div className="rounded-xl bg-white p-8 shadow-sm">
             <h3 className="mb-3 font-bold text-slate-800">How to lower your risk</h3>
             <ul className="text-sm leading-relaxed space-y-2">
               <li>
@@ -227,6 +366,7 @@ export default function Results() {
                 </a>
               </li>
             </ul>
+
             <Link
               to="/resources"
               className="mt-4 inline-block text-sm text-slate-700 underline underline-offset-2 hover:text-amber-600 hover:underline transition-colors">
