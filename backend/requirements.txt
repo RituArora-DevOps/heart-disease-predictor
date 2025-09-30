@@ -15,6 +15,7 @@ requests
 pytest
 sqlalchemy
 pydantic
+psycopg2
 
 # Editable install for development
 #-e .

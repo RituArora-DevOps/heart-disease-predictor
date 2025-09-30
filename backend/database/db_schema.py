@@ -1,10 +1,7 @@
 from sqlalchemy import Column, Integer, Float, Boolean, String, DateTime, JSON
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+from .base import Base
 from datetime import datetime
-
-# Base class for declarative class definitions
-Base = declarative_base()
 
 class UserAssessment(Base):
     """

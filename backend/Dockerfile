@@ -1,12 +1,8 @@
 # ---------------------------------------------------------------------
-# STAGE 1: Build Environment
-# Used to install dependencies into a clean environment (faster build, smaller final image)
+# STAGE 1: Builder Environment
+# Uses the full Python image to ensure robust installation of C extensions (like psycopg2)
 # ---------------------------------------------------------------------
-FROM python:3.11-slim AS builder
-
-# Install system dependencies necessary for compiling complex packages (like numpy, pandas)
-# If using a version without -slim, this might be needed:
-# RUN apt-get update && apt-get install -y build-essential
+FROM python:3.11 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -16,15 +12,33 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# Install necessary system dependencies for building psycopg2 (libpq-dev)
+# and immediately clean up the APT cache.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy requirements and install dependencies
+# Ensure 'psycopg2' is listed in requirements.txt
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    # CRITICAL CLEANUP: Remove the pip cache after installation to save space
+    && rm -rf ~/.cache/pip
 
 # ---------------------------------------------------------------------
-# STAGE 2: Runtime Environment
-# This is the final, minimalist image for production deployment
+# STAGE 2: Runtime Environment (Minimalist for production)
+# Switches back to the smaller 'slim' image
 # ---------------------------------------------------------------------
 FROM python:3.11-slim AS runtime
+
+# Install PostgreSQL client libraries needed at runtime (libpq5)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq5 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the virtual environment from the builder stage
 ENV VIRTUAL_ENV=/opt/venv
@@ -35,15 +49,15 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 WORKDIR /app
 
 # Copy application code and ML artifacts
-# Note: Assuming 'artifacts', 'database', and 'services' directories are siblings to app.py
 COPY app.py .
+COPY requirements.txt .
 COPY database ./database
 COPY services ./services
 COPY artifacts ./artifacts 
+COPY src ./src
 
 # Expose port (FastAPI default)
 EXPOSE 8000
 
-# Run FastAPI with Uvicorn (ensures the application starts correctly)
-# We set CMD here; the docker-compose environment variable PYTHONUNBUFFERED=1 handles logging
+# Run FastAPI with Uvicorn
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -3,8 +3,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 
-# Assuming db_schema is in the same directory 
-from .db_schema import Base 
+from .base import Base
+from . import db_schema
 
 # 1. Configuration (Reads from Environment)
 # The default is for local development or a typical Docker Compose setup

@@ -1,17 +1,56 @@
-version: '3.9'
 services:
+  # ----------------------------------------------------------------------
+  # 1. DATABASE SERVICE (PostgreSQL)
+  # ----------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine # Lightweight and stable PostgreSQL image
+    restart: always
+    environment:
+      # These variables set up the initial database and credentials
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=heartdb
+    # ports:
+    # Map the internal container port 5432 to host port 5432 (optional for dev)
+    # - "5432:5432"
+    volumes:
+      # Persist the data outside the container so it's not lost on restart
+      - postgres_data:/var/lib/postgresql/data/
+
+  # ----------------------------------------------------------------------
+  # 2. BACKEND SERVICE (FastAPI + ML Model)
+  # ----------------------------------------------------------------------
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
+      - "8000:80"
+    # volumes:
+    #   # Keep this volume mapping for local development/debugging
+    #   - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
+      # CRITICAL: Define the DATABASE_URL environment variable.
+      # It uses the service name 'db' as the hostname, as Docker Compose creates an internal network.
+      - DATABASE_URL=postgresql://user:password@db:5432/heartdb
 
+    depends_on:
+      # The backend service must wait for the database to be up and ready
+      - db
+
+  # ----------------------------------------------------------------------
+  # 3. FRONTEND SERVICE (Nginx + Static Files)
+  # ----------------------------------------------------------------------
   frontend:
     build: ./frontend
     ports:
+      # Frontend runs on 3000
       - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=/api
     depends_on:
+      # The frontend waits for the backend API to be ready
       - backend
+
+# Docker volumes for persistent storage
+volumes:
+  postgres_data:
