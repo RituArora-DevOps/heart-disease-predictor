@@ -1,5 +1,3 @@
-# In src/components/feature_engineer.py
-
 import os
 import sys
 import pandas as pd

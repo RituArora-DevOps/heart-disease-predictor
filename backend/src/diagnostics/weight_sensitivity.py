@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
-import joblib  # or use your own load_object if you have it
+import joblib 
 from math import log
 
 # Load model and preprocessor
 model = joblib.load('artifacts/model.pkl') 
 preprocessor = joblib.load('artifacts/preprocessor.pkl')
 
-# Base input (from your shared row)
+# Base input 
 base_input = {
     'General_Health': 'Good',
     'Checkup': 'Within the past year',

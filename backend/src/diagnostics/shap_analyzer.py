@@ -7,7 +7,6 @@ import numpy as np
 import shap
 import matplotlib.pyplot as plt
 
-# Assuming you have load_object in src/utils.py
 from src.utils import load_object
 
 # --- Configuration ---
@@ -129,7 +128,6 @@ def analyze_shap_values():
 
     except Exception as e:
         print(f"An error occurred during SHAP analysis: {e}", file=sys.stderr)
-        # Optionally re-raise the exception: raise CustomException(e, sys)
 
 if __name__ == '__main__':
     # Ensure the reports directory exists

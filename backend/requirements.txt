@@ -13,6 +13,8 @@ python-multipart
 shap
 requests
 pytest
+sqlalchemy
+pydantic
 
 # Editable install for development
 #-e .

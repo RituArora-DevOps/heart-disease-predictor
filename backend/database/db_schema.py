@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Float, Boolean, String, DateTime, JSON
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
 from datetime import datetime
 
 # Base class for declarative class definitions
@@ -13,7 +14,7 @@ class UserAssessment(Base):
 
     # Primary Key and Timestamp (Audit/Tracking)
     id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
     # Input Data (For Model Drift & Retraining)
     # Using JSON type to store the complex dictionary of 22 user inputs

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 import numpy as np
 import pandas as pd
@@ -6,6 +6,9 @@ import os
 import uvicorn
 import dill
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from database.database_config import get_db_session, create_db_tables
+from services.api_service import log_assessment
 
 # Initialize app
 app = FastAPI()
@@ -21,6 +24,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- DATABASE STARTUP EVENT ---
+@app.on_event("startup")
+def on_startup():
+    """Create database tables on startup if they don't exist."""
+    create_db_tables()
+    print("Database tables ensured/created.")
 
 # --- ARTIFACT LOADING CONFIGURATION ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -86,10 +96,9 @@ FINAL_COLUMNS = [
     'Green_Vegetables_Consumption_log_capped', 'FriedPotato_Consumption_log_capped' 
 ]
 
-
 # Inference route
 @app.post('/predict', response_model=PredictionResponse)
-def predict(data: PatientData):
+def predict(data: PatientData, db: Session = Depends(get_db_session)):
     try:
         input_dict = data.model_dump()
         
@@ -154,16 +163,28 @@ def predict(data: PatientData):
         # Use the global optimal threshold
         prediction = int(probability >= OPTIMAL_THRESHOLD)
 
+        # CRITICAL AUDIT STEP: Call the imported, robust logging function
+        log_assessment(db, input_dict, probability, bool(prediction))
+
         return PredictionResponse(
             prediction=prediction,
             probability=round(probability, 4), 
             threshold_used=round(OPTIMAL_THRESHOLD, 4)
         )
 
+    # Specific error handling: If log_assessment raised HTTPException (our 500 error), re-raise it
+    except HTTPException:
+        raise
+        
+    # Catch all other prediction or data transformation errors
     except Exception as e:
         # Log the error for debugging
-        print(f"Prediction failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed due to an internal error: {e}")
+        print(f"Prediction failed due to model/data error: {e}")
+        # Return a generic 500 to the user to hide internal details
+        raise HTTPException(
+            status_code=500, 
+            detail="Prediction failed due to an internal server error. Please check your input."
+        )
 
 # Run the app
 if __name__ == "__main__":
