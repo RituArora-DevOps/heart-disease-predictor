@@ -256,7 +256,7 @@ export default function Results() {
     doc.setFontSize(13);
 
     const explanationHeader = pred === 1 ? "The main factors driving your risk score up were:" : "The main protective factors lowering your risk were:";
-    writeWrappedBullet(explanationHeader); // 让标题句也遵循同一宽度与分页
+    writeWrappedBullet(explanationHeader);
 
     explanations.forEach((exp) => {
       writeWrappedBullet(exp);
@@ -292,7 +292,6 @@ export default function Results() {
       },
     ];
 
-    // 带链接的项目：首行可点击，其余行普通文本；同样自动换行/分页
     bullets.forEach((b) => {
       const indent = 12;
       const maxWidth = pageWidth - marginX * 2 - indent;
@@ -352,7 +351,6 @@ export default function Results() {
             </ul>
           </div>
 
-          {/* 右：How to lower your risk 单独一张卡片 */}
           <div className="rounded-xl bg-white p-8 shadow-sm">
             <h3 className="mb-3 font-bold text-slate-800">How to lower your risk</h3>
             <ul className="text-sm leading-relaxed space-y-2">
