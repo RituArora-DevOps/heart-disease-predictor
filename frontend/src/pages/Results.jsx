@@ -94,7 +94,7 @@ export default function Results() {
       explanations.push(`Biological sex (${sex}) is associated with a higher baseline risk in this model.`);
     }
 
-    // 5) Lifestyle / comorbidities (take the “worst” or “best” signal)
+    // 5) Lifestyle / comorbidities
     const smoking = inputObj.Smoking_History; // "Yes"/"No"
     const exercise = inputObj.Exercise; // "Yes"/"No"
     const arthritis = inputObj.Arthritis; // "Yes"/"No"
@@ -135,6 +135,28 @@ export default function Results() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const marginX = 48;
     let y = 56;
+
+    // 工具：在固定宽度内渲染“带圆点的换行段落”（与表格同宽）
+    const writeWrappedBullet = (text) => {
+      const indent = 12; // 圆点到正文的缩进
+      const maxWidth = pageWidth - marginX * 2 - indent; // 与表格同宽（扣掉缩进）
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const lines = doc.splitTextToSize(text, maxWidth);
+
+      lines.forEach((ln, idx) => {
+        if (y > pageHeight - 72) {
+          doc.addPage();
+          y = 56;
+        }
+        if (idx === 0) {
+          doc.text("•", marginX, y);
+          doc.text(ln, marginX + indent, y);
+        } else {
+          doc.text(ln, marginX + indent, y);
+        }
+        y += lineHeight;
+      });
+    };
 
     // Title + date
     doc.setFont("helvetica", "bold");
@@ -223,7 +245,7 @@ export default function Results() {
       },
     });
 
-    // NEW: Key factors
+    // Key factors
     y += 10;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
@@ -234,20 +256,13 @@ export default function Results() {
     doc.setFontSize(13);
 
     const explanationHeader = pred === 1 ? "The main factors driving your risk score up were:" : "The main protective factors lowering your risk were:";
-    doc.text(explanationHeader, marginX, y);
-    y += lineHeight;
+    writeWrappedBullet(explanationHeader);
 
     explanations.forEach((exp) => {
-      doc.text("•", marginX, y);
-      doc.text(exp, marginX + 12, y);
-      y += lineHeight;
-      if (y > doc.internal.pageSize.getHeight() - 72) {
-        doc.addPage();
-        y = 56;
-      }
+      writeWrappedBullet(exp);
     });
 
-    y += 30;
+    y += 10;
 
     // How to lower your risk
     doc.setFont("helvetica", "bold");
@@ -278,13 +293,24 @@ export default function Results() {
     ];
 
     bullets.forEach((b) => {
-      doc.text("•", marginX, y);
-      doc.textWithLink(b.text, marginX + 12, y, { url: b.url });
-      y += lineHeight;
-      if (y > doc.internal.pageSize.getHeight() - 72) {
-        doc.addPage();
-        y = 56;
-      }
+      const indent = 12;
+      const maxWidth = pageWidth - marginX * 2 - indent;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const lines = doc.splitTextToSize(b.text, maxWidth);
+
+      lines.forEach((ln, idx) => {
+        if (y > pageHeight - 72) {
+          doc.addPage();
+          y = 56;
+        }
+        if (idx === 0) {
+          doc.text("•", marginX, y);
+          doc.textWithLink(ln, marginX + indent, y, { url: b.url });
+        } else {
+          doc.text(ln, marginX + indent, y);
+        }
+        y += lineHeight;
+      });
     });
 
     // Footer
@@ -325,7 +351,6 @@ export default function Results() {
             </ul>
           </div>
 
-          {/* 右：How to lower your risk 单独一张卡片 */}
           <div className="rounded-xl bg-white p-8 shadow-sm">
             <h3 className="mb-3 font-bold text-slate-800">How to lower your risk</h3>
             <ul className="text-sm leading-relaxed space-y-2">
